@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\User;
+use App\Models\UserBooks;
 use Illuminate\Http\Request;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -15,6 +17,10 @@ class BookController extends Controller {
             'author' => 'required|string',
             'cover_image' => 'image|mimes:jpeg,png,jpg|max:2048',
         ];
+    }
+
+    public function index() {
+        return Book::all();
     }
 
     public function store(Request $request){
