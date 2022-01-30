@@ -111,22 +111,7 @@ class BookController extends Controller {
 
     public function rentBook($userId, $bookId) {
         try {
-            $user = User::find($userId);
-            $book = Book::find($bookId);
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sorry, user not found.'
-                ], 400);
-            }
-            if (!$book) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sorry, book not found.'
-                ], 400);
-            }
-
-            $existingRecord = UserBooks::where('user_id', $userId)->where('book_id', $bookId)->first();
+            $existingRecord = $this->rentBookValidation($userId, $bookId);
             if (!$existingRecord) {
                 $userBooks = UserBooks::create([
                     'user_id' => $userId,
@@ -149,5 +134,50 @@ class BookController extends Controller {
                 'message' => 'Book was not rented. Please try again later',
             ], 500);
         }
+    }
+
+    public function returnBook($userId, $bookId) {
+        try {
+            $existingRecord = $this->rentBookValidation($userId, $bookId);
+            if (!$existingRecord) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Specified book not rented by the user'
+                ], Response::HTTP_OK);
+            }
+            else {
+                $existingRecord->delete();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Book has been returned by the user'
+                ], Response::HTTP_OK);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Book was not returned. Please try again later',
+            ], 500);
+        }
+    }
+
+    private function rentBookValidation($userId, $bookId) {
+        $user = User::find($userId);
+        $book = Book::find($bookId);
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, user not found.'
+            ], 400);
+        }
+        if (!$book) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, book not found.'
+            ], 400);
+        }
+
+        $existingRecord = UserBooks::where('user_id', $userId)->where('book_id', $bookId)->first();
+
+        return $existingRecord;
     }
 }
