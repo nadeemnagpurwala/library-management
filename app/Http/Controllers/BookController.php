@@ -20,7 +20,13 @@ class BookController extends Controller {
     }
 
     public function index() {
-        return Book::all();
+        $books = Book::all();
+        if (!$books) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No books found.'
+            ], 400);
+        }
     }
 
     public function store(Request $request){
@@ -160,24 +166,56 @@ class BookController extends Controller {
         }
     }
 
-    private function rentBookValidation($userId, $bookId) {
+    public function userBooks($userId) {
+        try {
+            $existingRecord = $this->rentBookValidation($userId);
+            if (!$existingRecord) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No book rented by the user'
+                ], Response::HTTP_OK);
+            }
+            else {
+                return response()->json([
+                    'success' => true,
+                    'message' => $existingRecord
+                ], Response::HTTP_OK);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Book list rented by the user not found. Please try again later',
+            ], 500);
+        }
+    }
+
+    private function rentBookValidation($userId, $bookId = null) {
         $user = User::find($userId);
-        $book = Book::find($bookId);
         if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sorry, user not found.'
             ], 400);
         }
-        if (!$book) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sorry, book not found.'
-            ], 400);
+        if (!empty($bookId)) {
+            $book = Book::find($bookId);
+            if (!$book) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sorry, book not found.'
+                ], 400);
+            }
+
+            $existingRecord = UserBooks::where('user_id', $userId)->where('book_id', $bookId)->first();
+            return $existingRecord;
         }
-
-        $existingRecord = UserBooks::where('user_id', $userId)->where('book_id', $bookId)->first();
-
-        return $existingRecord;
+        
+        else {
+            $existingRecord = UserBooks::where('user_id', $userId);
+            if ($existingRecord->count() > 0) {
+                return $existingRecord->get();
+            }
+        }
+        return false;
     }
 }

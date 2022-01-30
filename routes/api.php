@@ -35,4 +35,5 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::delete('delete_book/{book}',  [BookController::class, 'destroy']);
     Route::post('rent_book/{user}/{book}', [BookController::class, 'rentBook']);
     Route::post('return_book/{user}/{book}', [BookController::class, 'returnBook']);
+    Route::post('user_books/{user}', [BookController::class, 'userBooks']);
 });
