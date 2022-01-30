@@ -125,4 +125,25 @@ class UserController extends Controller {
 
         return ['status' => 'true', 'message' => 'Validation Passed'];
     }
+
+    public function logout(Request $request){
+        $validator = Validator::make($request->only('token'), [
+            'token' => 'required'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->messages()], 200);
+        }
+        try {
+            JWTAuth::invalidate($request->token);
+            return response()->json([
+                'success' => true,
+                'message' => 'User has been logged out'
+            ]);
+        } catch (JWTException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, user cannot be logged out'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }
