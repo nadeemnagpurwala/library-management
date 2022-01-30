@@ -41,6 +41,42 @@ class BookController extends Controller {
         }
     }
 
+    public function editBook(Request $request, Book $book) {
+        try {
+            $validation = $this->formValidations($request, $book['id']);
+            if ($validation['status'] == 'true') {
+                $requestData = $request->all();
+                $currentBook = $book->update($requestData);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Book updated successfully',
+                    'data' => $currentBook
+                ], Response::HTTP_OK);
+            }
+            else {
+                return response()->json(['error' => $validation['message']], 200);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Book not updated',
+            ], 500);
+        }
+    }
+
+    public function show($id) {
+        $book = Book::find($id);
+    
+        if (!$book) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, book not found.'
+            ], 400);
+        }
+    
+        return $book;
+    }
+
     private function formValidations(Request $request, $id = null) {
         $data = $request->only('book_name', 'author', 'cover_image');
 

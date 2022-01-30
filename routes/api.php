@@ -28,4 +28,6 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::get('get_user', [UserController::class, 'getUser']);
     Route::post('edit_user/{user}', [UserController::class, 'editUser']);
     Route::post('create_book', [BookController::class, 'store']);
+    Route::post('edit_book/{book}', [BookController::class, 'editBook']);
+    Route::get('get_book/{book}', [BookController::class, 'show']);
 });
