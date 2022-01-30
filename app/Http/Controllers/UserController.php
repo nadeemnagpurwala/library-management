@@ -27,7 +27,10 @@ class UserController extends Controller {
             if ($validator->fails()) {
                 return response()->json(['error' => $validator->messages()], 200);
             }
-            $user = User::create($request->all());
+
+            $requestData = $request->all();
+            $requestData['password'] = bcrypt($request->password);
+            $user = User::create($requestData);
             return response()->json([
                 'success' => true,
                 'message' => 'User created successfully',
@@ -39,5 +42,35 @@ class UserController extends Controller {
                 'message' => 'User not created',
             ], 500);
         }
+    }
+
+    public function authenticate(Request $request) {
+        $credentials = $request->only('email', 'password');
+        $validator = Validator::make($credentials, [
+            'email' => 'required|email',
+            'password' => 'required|string|min:6|max:50'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->messages()], 200);
+        }
+        try {
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Login credentials are invalid.',
+                ], 400);
+            }
+        }
+        catch (JWTException $e) {
+            return response()->json([
+                    'success' => false,
+                    'message' => 'Could not create token.',
+                ], 500);
+        }
+    
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+        ]);
     }
 }
