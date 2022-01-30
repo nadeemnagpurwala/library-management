@@ -27,6 +27,7 @@ class BookController extends Controller {
                 'message' => 'No books found.'
             ], 400);
         }
+        return $books;
     }
 
     public function store(Request $request){
