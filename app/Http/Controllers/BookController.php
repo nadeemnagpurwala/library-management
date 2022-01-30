@@ -108,4 +108,46 @@ class BookController extends Controller {
             'message' => 'Book deleted successfully'
         ], Response::HTTP_OK);
     }
+
+    public function rentBook($userId, $bookId) {
+        try {
+            $user = User::find($userId);
+            $book = Book::find($bookId);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sorry, user not found.'
+                ], 400);
+            }
+            if (!$book) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sorry, book not found.'
+                ], 400);
+            }
+
+            $existingRecord = UserBooks::where('user_id', $userId)->where('book_id', $bookId)->first();
+            if (!$existingRecord) {
+                $userBooks = UserBooks::create([
+                    'user_id' => $userId,
+                    'book_id' => $bookId,
+                ]);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Book rented by user successfully'
+                ], Response::HTTP_OK);
+            }
+            else {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Book has already been rented by the user'
+                ], Response::HTTP_OK);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Book was not rented. Please try again later',
+            ], 500);
+        }
+    }
 }
