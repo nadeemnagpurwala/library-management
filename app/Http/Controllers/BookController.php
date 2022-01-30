@@ -93,4 +93,13 @@ class BookController extends Controller {
 
         return ['status' => 'true', 'message' => 'Validation Passed'];
     }
+
+    public function destroy(Book $book) {
+        $book->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Book deleted successfully'
+        ], Response::HTTP_OK);
+    }
 }

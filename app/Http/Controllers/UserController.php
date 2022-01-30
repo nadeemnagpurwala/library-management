@@ -146,4 +146,13 @@ class UserController extends Controller {
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function destroy(User $user) {
+        $user->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted successfully'
+        ], Response::HTTP_OK);
+    }
 }
