@@ -128,6 +128,12 @@ class BookController extends Controller {
                     'message' => 'Book rented by user successfully'
                 ], Response::HTTP_OK);
             }
+            elseif (isset($existingRecord['message'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $existingRecord['message']
+                ], 400);
+            }
             else {
                 return response()->json([
                     'success' => true,
@@ -150,6 +156,12 @@ class BookController extends Controller {
                     'success' => true,
                     'message' => 'Specified book not rented by the user'
                 ], Response::HTTP_OK);
+            }
+            elseif (isset($existingRecord['message'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $existingRecord['message']
+                ], 400);
             }
             else {
                 $existingRecord->delete();
@@ -175,6 +187,12 @@ class BookController extends Controller {
                     'message' => 'No book rented by the user'
                 ], Response::HTTP_OK);
             }
+            elseif (isset($existingRecord['message'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $existingRecord['message']
+                ], 400);
+            }
             else {
                 return response()->json([
                     'success' => true,
@@ -192,18 +210,12 @@ class BookController extends Controller {
     private function rentBookValidation($userId, $bookId = null) {
         $user = User::find($userId);
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sorry, user not found.'
-            ], 400);
+            return ['message' => 'Sorry, user not found'];
         }
         if (!empty($bookId)) {
             $book = Book::find($bookId);
             if (!$book) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sorry, book not found.'
-                ], 400);
+                return ['message' => 'Sorry, book not found'];
             }
 
             $existingRecord = UserBooks::where('user_id', $userId)->where('book_id', $bookId)->first();
