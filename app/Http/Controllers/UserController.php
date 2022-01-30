@@ -73,4 +73,12 @@ class UserController extends Controller {
             'token' => $token,
         ]);
     }
+
+    public function getUser(Request $request) {
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
+        $user = JWTAuth::authenticate($request->token);
+        return response()->json(['user' => $user]);
+    }
 }
