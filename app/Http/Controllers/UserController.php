@@ -10,32 +10,34 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller {
+    public function __construct(){
+        $this->rules = [
+            'firstname' => 'required|string',
+            'lastname' => 'required|string',
+            'mobile' => 'required|digits_between:10,10|unique:users,mobile',
+            'email' => 'required|email|unique:users,email',
+            'age' => 'required|numeric',
+            'gender' => 'required|in:m,f,o',
+            'city' => 'required|string',
+            'password' => 'required|string|min:6|max:50'
+        ];
+    }
     public function register(Request $request) {
         try {
-            $data = $request->only('firstname','lastname','mobile','email','age','gender','city','password'
-            );
-            $validator = Validator::make($data, [
-                'firstname' => 'required|string',
-                'lastname' => 'required|string',
-                'mobile' => 'required|digits_between:10,10|unique:users',
-                'email' => 'required|email|unique:users',
-                'age' => 'required|numeric',
-                'gender' => 'required|in:m,f,o',
-                'city' => 'required|string',
-                'password' => 'required|string|min:6|max:50'
-            ]);
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->messages()], 200);
+            $validation = $this->formValidations($request);
+            if ($validation['status'] == 'true') {
+                $requestData = $request->all();
+                $requestData['password'] = bcrypt($request->password);
+                $user = User::create($requestData);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'User created successfully',
+                    'data' => $user
+                ], Response::HTTP_OK);
             }
-
-            $requestData = $request->all();
-            $requestData['password'] = bcrypt($request->password);
-            $user = User::create($requestData);
-            return response()->json([
-                'success' => true,
-                'message' => 'User created successfully',
-                'data' => $user
-            ], Response::HTTP_OK);
+            else {
+                return response()->json(['error' => $validation['message']], 200);
+            }
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -80,5 +82,47 @@ class UserController extends Controller {
         ]);
         $user = JWTAuth::authenticate($request->token);
         return response()->json(['user' => $user]);
+    }
+
+    public function editUser(Request $request, User $user) {
+        try {
+            $validation = $this->formValidations($request, $user['id']);
+            if ($validation['status'] == 'true') {
+                $requestData = $request->all();
+                $requestData['password'] = bcrypt($request->password);
+                $currentUser = $user->update($requestData);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'User updated successfully',
+                    'data' => $currentUser
+                ], Response::HTTP_OK);
+            }
+            else {
+                return response()->json(['error' => $validation['message']], 200);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not updated',
+            ], 500);
+        }
+    }
+
+    private function formValidations(Request $request, $id = null) {
+        $data = $request->only('firstname','lastname','mobile','email','age','gender','city','password');
+
+        $rules = $this->rules;
+        if (!empty($id)) {
+            $rules['email'] = $rules['email'] . ',' . $id;
+            $rules['mobile'] = $rules['mobile'] . ',' . $id;
+        }
+        
+        $validator = Validator::make($data, $rules);
+
+        if ($validator->fails()) {
+            return ['status' => 'false', 'message' => $validator->messages()];
+        }
+
+        return ['status' => 'true', 'message' => 'Validation Passed'];
     }
 }
